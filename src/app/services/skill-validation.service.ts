@@ -56,7 +56,7 @@ export class SkillValidationService {
         throw new Error(INVALID_INPUT);
       }
       // all checks out
-      skills.push({ name, level });
+      skills.push({ name, level, value: level });
     }
     return skills;
   }

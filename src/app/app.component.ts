@@ -11,10 +11,10 @@ export class AppComponent {
       name: 'angular',
       level: 5,
     },
-    // {
-    //   name: 'd3',
-    //   level: 2,
-    // },
+    {
+      name: 'd3',
+      level: 2,
+    },
     {
       name: 'web components',
       level: 4,

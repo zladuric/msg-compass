@@ -2,14 +2,23 @@
 import { Component, HostBinding, Input, OnInit } from '@angular/core';
 import * as selection from 'd3-selection';
 import * as scale from 'd3-scale';
-
+import * as array from 'd3-array';
+import * as shape from 'd3-shape';
+import * as colors from 'd3-scale-chromatic';
 
 // Module
 import { Skill } from '../../models/skill';
 import { SkillValidationService } from '../../services/skill-validation.service';
 
-const DEFAULT_WIDTH = 600;
-const DEFAULT_HEIGHT = 600;
+// Some consts
+const DEFAULT_WIDTH = 400;
+const DEFAULT_HEIGHT = 350;
+
+const MARGIN = 30;
+const CIRCLE_OPACITY = 0.1;
+const OPACITY_AREA = 0.35;
+const POINT_RADIUS = 5;
+
 
 @Component({
   selector: 'msg-kompass',
@@ -76,7 +85,6 @@ export class KompassComponent implements OnInit {
     console.log('Rendering...');
     try {
       this.setupGraph();
-      this.drawAxes();
     } catch (e) {
       console.log('Error rendering.', e);
       this.hasError = true;
@@ -84,65 +92,158 @@ export class KompassComponent implements OnInit {
     console.log('...rendering done.');
   }
 
-  /**
-   * Draws the base graph layers.
-   */
   private setupGraph() {
-    this.x = this.width / 2;
-    this.y = this.height / 2;
-    this.svg = selection.select('.compass')
-      .append('svg:svg')
-      .attr('height', this.height)
-      .attr('width', this.width)
-      .attr('class', 'msg-skill-compass')
-      .append('g')
-      .attr('height', this.height)
-      .attr('width', this.width)
-      .attr('transform', `translate(${ this.x }, ${ this.y })`);
-    this.axes = this.svg.append('g').attr('class', 'msg-skill-axes');
-    this.points = this.svg.append('g').attr('class', 'msg-skill-points');
-    this.fill = this.svg.append('g').attr('class', 'msg-skill-fill');
+    const allAxes = this._skills.map(s => s.name);
+    const total = this._skills.length;
+    const radius = Math.min(this.width / 2, this.height / 2);
+    const angleSlice = Math.PI * 2 / total;
 
-    return this.svg;
-  }
+    // Scale for the radius
+    const rScale = scale.scaleLinear()
+      .range([0, radius])
+      .domain([0, 5]);
 
-  private altDrawAxes() {
-    const s = scale.scaleOrdinal()
-      .range(['#58D6C7','#CC333F','#00A0B0']);
-    
-  }
+    // Remove old compass, if any
+    selection.select('.compas').select('svg').remove();
 
-  /**
-   * Draws and labels the axes
-   */
-  private drawAxes() {
-    const pi = Math.PI;
-    const count = this._skills.length;
+    // Initiate the radar chart SVG
+    const svg = selection.select('.compass').append('svg')
+      .attr('width', this.width + 2 * MARGIN)
+      .attr('height', this.height + 2 * MARGIN)
+      .attr('class', '.msg-skill-compass');
 
-    const arc = 2 * pi / count;
-    const axisData = this._skills.map((s, idx) => ({
-      name: s.name,
-      level: s.level,
-      x: this.x - Math.cos(idx * arc) * this.x,
-      y: this.y - Math.sin(idx * arc) * this.y,
-    }));
-    this.axes = this.axes
-      .selectAll('g')
-      .data(axisData);
+    // Append a g element
+    const g = svg.append('g')
+      .attr('transform', `translate(${ this.width / 2 + MARGIN }, ${ this.height / 2 + MARGIN  })`);
 
-    this.axes
+    // Some glow stuff
+    const filter = g.append('defs').append('filter').attr('id', 'glow');
+    filter.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'coloredBlur');
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    const howManyCircles = 5;
+
+    // Wrapper for the grid & axes
+    const axisGrid = g.append('g').attr('class', 'axisWrapper');
+    axisGrid.selectAll('.levels')
+      // How many circles to draw
+      .data(array.range(1, howManyCircles + 1).reverse())
+      .enter()
+      .append('circle')
+      .attr('class', 'gridCircle')
+      .attr('r', d => radius / howManyCircles * d)
+      .style('fill', '#CDCDCD')
+      .style('stroke', '#CDCDCD')
+      .style('fill-opacity', CIRCLE_OPACITY)
+      .style('filter', 'url(#glow)');
+
+    // Skill level text
+    axisGrid.selectAll('.axisLabel')
+      .data(array.range(1, howManyCircles + 1).reverse())
+      .enter().append('text')
+      .attr('class', 'axisLabel')
+      .attr('x', 4)
+      .attr('y', d => -d * radius / howManyCircles)
+      .attr('dy', '0.4em')
+      .style('font-size', '10px')
+      .attr('fill', '#737373')
+      .text(d => d);
+
+    // Now the fun part. Draw axes for each skill
+    const axis = axisGrid.selectAll('.axis')
+      .data(allAxes)
       .enter()
       .append('g')
-      .attr('title', d => d.name);
+      .attr('class', 'axis');
+    // Append the lines
 
-    this.axes.enter()
-      .append('line')
-      .attr('x0', this.x)
-      .attr('y0', this.y)
-      .attr('x1', d => {
-        console.log('D', d);
-        return d.x;
-      })
-      .attr('y1', d => d.y);
+    axis.append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', (d, i) => rScale(howManyCircles * 1.1) * Math.cos(angleSlice * i - Math.PI / 2))
+      .attr('y2', (d, i) => rScale(howManyCircles * 1.1) * Math.sin(angleSlice * i - Math.PI / 2))
+      .attr('class', 'line')
+      .style('stroke', 'white')
+      .style('stroke-width', '2px');
+
+    const labelWidth = 60;
+    // Append the labels at each axis
+    axis.append('text')
+      .attr('class', 'legend')
+
+
+      .style('font-size', '11px')
+      .attr('text-anchor', 'middle')
+      .attr('dy', '0.35em')
+      .attr('x', (d, i) => rScale(howManyCircles * 1.15) * Math.cos(angleSlice * i - Math.PI / 2))
+      .attr('y', (d, i) => rScale(howManyCircles * 1.15) * Math.sin(angleSlice * i - Math.PI / 2))
+      .text(d => d)
+      .call(wrap, labelWidth);
+
+
+    // Now the data
+    // The radial line function
+    const radarLine = shape.radialLine()
+      .curve(shape.curveLinearClosed)
+      .radius(d => rScale(d.level))
+      .angle((d, i) => i * angleSlice);
+
+    // Create a wrapper for the blobs
+    const blobWrapper = g.selectAll('.radarWrapper')
+      .data([this._skills])
+      .enter().append('g')
+      .attr('class', 'radarWrapper');
+
+    const color = scale.scaleOrdinal(colors.schemeCategory10);
+console.log(radarLine.toString())
+    // Append the backgrounds
+    blobWrapper
+      .append('path')
+      .attr('class', 'radarArea')
+      .attr('d', d => radarLine(d))
+      .style('fill', (d, i)  => color(i))
+      .style('fill-opacity', OPACITY_AREA);
+
+    // Append the Dots for selected skills
+    blobWrapper.selectAll('.radarCircle')
+      .data(d => d)
+      .enter().append('circle')
+      .attr('class', 'radarCircle')
+      .attr('r', POINT_RADIUS)
+      .attr('cx', (d, i)  => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+      .attr('cy', (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
+      .style('fill', (d, i, j) => color(j))
+      .style('fill-opacity', 0.8);
+
+
+    // Taken from http://bl.ocks.org/mbostock/7555321
+    // Wraps SVG text
+    function wrap(text, width) {
+      text.each(function () {
+        const text = selection.select(this);
+        const words = text.text().split(/\s+/).reverse();
+        let word;
+        let line = [];
+        let lineNumber = 0;
+        const lineHeight = 1.4; // ems
+        const y = text.attr('y');
+        const x = text.attr('x');
+        const dy = parseFloat(text.attr('dy'));
+        let tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
+
+        while (word = words.pop()) {
+          line.push(word);
+          tspan.text(line.join(' '));
+          if (tspan.node().getComputedTextLength() > width) {
+            line.pop();
+            tspan.text(line.join(' '));
+            line = [word];
+            tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
+          }
+        }
+      });
+    }
   }
 }

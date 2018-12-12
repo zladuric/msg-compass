@@ -20,4 +20,5 @@ export enum SkillLevel {
 export interface Skill {
   name: string;
   level: SkillLevel;
+  value?: number;
 }
