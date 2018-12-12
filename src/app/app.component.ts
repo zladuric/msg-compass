@@ -6,5 +6,22 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'msg-compass';
+  skills = [
+    {
+      name: 'angular',
+      level: 5,
+    },
+    // {
+    //   name: 'd3',
+    //   level: 2,
+    // },
+    {
+      name: 'web components',
+      level: 4,
+    },
+    {
+      name: 'javascript',
+      level: '5',
+    },
+  ];
 }
