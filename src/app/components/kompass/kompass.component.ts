@@ -1,11 +1,10 @@
 // Libraries
-import { Component, HostBinding, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, Input, OnInit } from '@angular/core';
 import * as selection from 'd3-selection';
 import * as scale from 'd3-scale';
 import * as array from 'd3-array';
 import * as shape from 'd3-shape';
 import * as colors from 'd3-scale-chromatic';
-
 // Module
 import { Skill } from '../../models/skill';
 import { SkillValidationService } from '../../services/skill-validation.service';
@@ -23,7 +22,8 @@ const POINT_RADIUS = 5;
 @Component({
   selector: 'msg-kompass',
   templateUrl: './kompass.component.html',
-  styleUrls: ['./kompass.component.scss']
+  styleUrls: ['./kompass.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KompassComponent implements OnInit {
 
@@ -31,9 +31,11 @@ export class KompassComponent implements OnInit {
    * Skills input
    */
   @Input() set skills(skills: string | Skill[]) {
+    console.log('Checking skills', skills);
     if (!skills) {
       this.hasError = false;
       this._skills = [];
+      this.cd.markForCheck();
       return;
     }
     // Validate input first
@@ -44,6 +46,7 @@ export class KompassComponent implements OnInit {
       this.hasError = true;
       this._skills = [];
     }
+    this.cd.markForCheck();
   }
   get skills(): string | Skill[] {
     return this._skills;
@@ -76,7 +79,8 @@ export class KompassComponent implements OnInit {
   private x;
   private y;
 
-  constructor(private skillValidationService: SkillValidationService) { }
+  constructor(private skillValidationService: SkillValidationService,
+              private cd: ChangeDetectorRef) { }
 
   ngOnInit() {
   }
@@ -90,6 +94,7 @@ export class KompassComponent implements OnInit {
       this.hasError = true;
     }
     console.log('...rendering done.');
+    this.cd.markForCheck();
   }
 
   private setupGraph() {
@@ -187,7 +192,7 @@ export class KompassComponent implements OnInit {
     // The radial line function
     const radarLine = shape.radialLine()
       .curve(shape.curveLinearClosed)
-      .radius(d => rScale(d.level))
+      .radius((d:any) => rScale(d.level))
       .angle((d, i) => i * angleSlice);
 
     // Create a wrapper for the blobs
@@ -197,13 +202,13 @@ export class KompassComponent implements OnInit {
       .attr('class', 'radarWrapper');
 
     const color = scale.scaleOrdinal(colors.schemeCategory10);
-console.log(radarLine.toString())
+
     // Append the backgrounds
     blobWrapper
       .append('path')
       .attr('class', 'radarArea')
-      .attr('d', d => radarLine(d))
-      .style('fill', (d, i)  => color(i))
+      .attr('d', (d:any) => radarLine(d))
+      .style('fill', (d, i: any)  => color(i))
       .style('fill-opacity', OPACITY_AREA);
 
     // Append the Dots for selected skills
@@ -214,7 +219,7 @@ console.log(radarLine.toString())
       .attr('r', POINT_RADIUS)
       .attr('cx', (d, i)  => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
       .attr('cy', (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
-      .style('fill', (d, i, j) => color(j))
+      .style('fill', (d, i, j: any) => color(j))
       .style('fill-opacity', 0.8);
 
 

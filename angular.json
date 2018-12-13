@@ -15,7 +15,8 @@
       },
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+//          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "ngx-build-plus:build",
           "options": {
             "outputPath": "dist/msg-compass",
             "index": "src/index.html",
@@ -30,9 +31,8 @@
               "src/styles.scss"
             ],
             "scripts": [
-              {
-                "input": "node_modules/document-register-element/build/document-register-element.js"
-              }
+
+              "node_modules/@webcomponents/custom-elements/src/native-shim.js"
             ]
           },
           "configurations": {
