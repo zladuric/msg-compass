@@ -9,7 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "build.for.test": "npm run build.prod && rm tmp/*.js && cp dist/msg-compass/{main,scripts}*.j{s,s.map} tmp"
+    "cp": "cp dist/msg-compass/scripts*.js tmp/scripts.js && cp dist/msg-compass/main*.js tmp/main.js",
+    "build.for.test": "rm -f tmp/*.js && npm run build.prod && npm run cp"
   },
   "private": true,
   "dependencies": {

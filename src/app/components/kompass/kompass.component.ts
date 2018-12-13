@@ -31,18 +31,21 @@ export class KompassComponent implements OnInit {
    * Skills input
    */
   @Input() set skills(skills: string | Skill[]) {
-    console.log('Checking skills', skills);
     if (!skills) {
       this.hasError = false;
       this._skills = [];
+      this.cleanup();
       this.cd.markForCheck();
       return;
     }
     // Validate input first
     try {
+      this.hasError = false;
       this._skills = this.skillValidationService.parseSkills(skills);
       this.render();
     } catch (e) {
+      console.log('Error setting skills', e);
+      this.cleanup();
       this.hasError = true;
       this._skills = [];
     }
@@ -86,14 +89,12 @@ export class KompassComponent implements OnInit {
   }
 
   private render() {
-    console.log('Rendering...');
     try {
       this.setupGraph();
     } catch (e) {
       console.log('Error rendering.', e);
       this.hasError = true;
     }
-    console.log('...rendering done.');
     this.cd.markForCheck();
   }
 
@@ -109,7 +110,7 @@ export class KompassComponent implements OnInit {
       .domain([0, 5]);
 
     // Remove old compass, if any
-    selection.select('.compas').select('svg').remove();
+    selection.select('.compass').select('svg').remove();
 
     // Initiate the radar chart SVG
     const svg = selection.select('.compass').append('svg')
@@ -177,14 +178,27 @@ export class KompassComponent implements OnInit {
     // Append the labels at each axis
     axis.append('text')
       .attr('class', 'legend')
-
-
       .style('font-size', '11px')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
       .attr('x', (d, i) => rScale(howManyCircles * 1.15) * Math.cos(angleSlice * i - Math.PI / 2))
       .attr('y', (d, i) => rScale(howManyCircles * 1.15) * Math.sin(angleSlice * i - Math.PI / 2))
-      .text(d => d)
+      .text((d: any) => {
+        switch (d) {
+          case 1:
+            return 'BASIC';
+          case 2:
+            return 'NOVICE';
+          case 3:
+            return 'INTERMEDIATE';
+          case 4:
+            return 'ADVANCED';
+          case 5:
+            return 'EXPERT';
+          default:
+            return d;
+        }
+      })
       .call(wrap, labelWidth);
 
 
@@ -192,7 +206,7 @@ export class KompassComponent implements OnInit {
     // The radial line function
     const radarLine = shape.radialLine()
       .curve(shape.curveLinearClosed)
-      .radius((d:any) => rScale(d.level))
+      .radius((d: any) => rScale(d.level))
       .angle((d, i) => i * angleSlice);
 
     // Create a wrapper for the blobs
@@ -207,7 +221,7 @@ export class KompassComponent implements OnInit {
     blobWrapper
       .append('path')
       .attr('class', 'radarArea')
-      .attr('d', (d:any) => radarLine(d))
+      .attr('d', (d: any) => radarLine(d))
       .style('fill', (d, i: any)  => color(i))
       .style('fill-opacity', OPACITY_AREA);
 
@@ -250,5 +264,10 @@ export class KompassComponent implements OnInit {
         }
       });
     }
+  }
+
+  // remove old graphs, if any.
+  private cleanup() {
+    selection.select('.compass').select('svg').remove();
   }
 }
