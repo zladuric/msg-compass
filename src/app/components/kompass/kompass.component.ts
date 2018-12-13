@@ -155,7 +155,22 @@ export class KompassComponent implements OnInit {
       .attr('dy', '0.4em')
       .style('font-size', '10px')
       .attr('fill', '#737373')
-      .text(d => d);
+      .text((d: any) => {
+        switch (d) {
+          case 1:
+            return 'BASIC';
+          case 2:
+            return 'NOVICE';
+          case 3:
+            return 'INTERMEDIATE';
+          case 4:
+            return 'ADVANCED';
+          case 5:
+            return 'EXPERT';
+          default:
+            return d;
+        }
+      });
 
     // Now the fun part. Draw axes for each skill
     const axis = axisGrid.selectAll('.axis')
@@ -183,22 +198,7 @@ export class KompassComponent implements OnInit {
       .attr('dy', '0.35em')
       .attr('x', (d, i) => rScale(howManyCircles * 1.15) * Math.cos(angleSlice * i - Math.PI / 2))
       .attr('y', (d, i) => rScale(howManyCircles * 1.15) * Math.sin(angleSlice * i - Math.PI / 2))
-      .text((d: any) => {
-        switch (parseInt(d, 10)) {
-          case 1:
-            return 'BASIC';
-          case 2:
-            return 'NOVICE';
-          case 3:
-            return 'INTERMEDIATE';
-          case 4:
-            return 'ADVANCED';
-          case 5:
-            return 'EXPERT';
-          default:
-            return d;
-        }
-      })
+      .text(d => d)
       .call(wrap, labelWidth);
 
 
