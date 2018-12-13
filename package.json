@@ -9,6 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
+    "serve.testing": "browser-sync testing/ --watch testing/*",
     "cp": "cp dist/msg-compass/scripts*.js testing/scripts.js && cp dist/msg-compass/main*.js testing/main.js",
     "build.for.test": "rm -f testing/*.js && npm run build.prod && npm run cp"
   },
@@ -40,6 +41,7 @@
     "@types/jasmine": "~2.8.8",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "~8.9.4",
+    "browser-sync": "^2.26.3",
     "codelyzer": "~4.3.0",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
