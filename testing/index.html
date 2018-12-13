@@ -1,0 +1,93 @@
+<html>
+<head>
+  <style>
+
+    main {
+      height: 500px;
+    }
+    .error-message {
+      color: red;
+      display: none;
+    }
+
+    .skills-error + .error-message {
+      display: block;
+    }
+  </style>
+  <!--<script type="text/javascript" src="all.js"></script>-->
+  <script type="text/javascript" src="scripts.js"></script>
+  <script type="text/javascript" src="main.js"></script>
+  <script type="text/javascript">
+    const skills = [
+      {
+        name: 'typescript',
+        level: 4,
+      },
+      {
+        name: 'math',
+        level: 4,
+      },
+      {
+        name: 'graphs',
+        level: 3,
+      },
+      {
+        name: 'javascript',
+        level: '5',
+      },
+    ];
+
+    const otherSkills = skills.concat(
+      {
+        name: 'painting',
+        level: '1',
+      });
+
+    function assignGoodSkills() {
+      document.querySelector('msg-compass').setAttribute('skills', JSON.stringify(skills));
+    }
+
+    function assignOtherSkills() {
+      document.querySelector('msg-compass').setAttribute('skills', JSON.stringify(otherSkills));
+    }
+
+    function assignLousySkills() {
+      document.querySelector('msg-compass').setAttribute('skills', 'Dosen work.');
+    }
+
+    function changeSize() {
+      const compass = document.querySelector('msg-compass');
+
+      compass.setAttribute('width', 650);
+      compass.setAttribute('height', 650);
+      compass.setAttribute('skills', JSON.stringify(otherSkills));
+    }
+  </script>
+</head>
+<body>
+  <main>
+    <msg-compass></msg-compass>
+    <div class="error-message">Skills not valid.</div>
+  </main>
+
+  <hr>
+  <div>
+    <p>
+      <button onclick="assignGoodSkills()">Assign</button>
+      some skills.
+    </p>
+    <p>
+      <button onclick="assignOtherSkills()">Assign</button>
+      some other skills.
+    </p>
+    <p>
+      <button onclick="assignLousySkills()">Assign</button>
+      some invalid skills.
+    </p>
+    <p>
+      <button onclick="changeSize()">Change the size</button> and assign
+      some skills.
+    </p>
+  </div>
+</body>
+</html>

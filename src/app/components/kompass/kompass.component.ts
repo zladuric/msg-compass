@@ -184,7 +184,7 @@ export class KompassComponent implements OnInit {
       .attr('x', (d, i) => rScale(howManyCircles * 1.15) * Math.cos(angleSlice * i - Math.PI / 2))
       .attr('y', (d, i) => rScale(howManyCircles * 1.15) * Math.sin(angleSlice * i - Math.PI / 2))
       .text((d: any) => {
-        switch (d) {
+        switch (parseInt(d, 10)) {
           case 1:
             return 'BASIC';
           case 2:
